@@ -1,122 +1,62 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import {useState, useEffect} from "react"
+import {Routes, Route} from 'react-router'
+const API_URL = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd'
 
-function App() {
-  const [count, setCount] = useState(0)
+import HomePage from "./pages/home"
+import AboutPage from "./pages/about"
+import NotFoundPage from "./pages/not-found"
+import CoinDetailsPage from "./pages/coin-details"
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+import Header from "./components/Header"
 
-      <div className="ticks"></div>
+const App = () => {
+    const [coins, setCoins] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+    const [limit, setLimit] = useState(10)
+    const [filter, setFilter] = useState('')
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+    // when app mounts
+    useEffect(() => {
+        fetch(`${API_URL}&order=market_cap_desc&per_page=${limit}&page=1&sparkline=false`)
+          .then((res) => {
+            if(!res.ok) throw new Error('Fail to fetch data!')
+            return res.json()
+          })
+          .then((data) => {
+            console.log(data)
+            setCoins(data)
+            setLoading(false)
+          })
+          .catch((err) => {
+            setError(err.message)
+            setLoading(false)
+          })
+    }, [limit])
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+
+    return(
+      <>
+      <Header />
+      <Routes>
+        <Route path='/' element={ <HomePage
+          coins={coins}
+          filter={filter}
+          setFilter={setFilter}
+          limit={limit}
+          setLimit={setLimit}
+          loading={loading}
+          error={error}
+          />
+        }/>
+        <Route path='/about' element={<AboutPage />} />
+        <Route path="/coin/:id" element={<CoinDetailsPage />}/>
+        <Route path='*' element={<NotFoundPage />} />
+      </Routes>
+      </>
+    )
+
+
 }
 
 export default App
